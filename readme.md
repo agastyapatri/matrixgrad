@@ -43,11 +43,22 @@ matrix_backward(m5) // calcuating the derivative of y wrt (m1, m2, m3, m4)
 ##  **Building and using this library** 
 I do not recommended using this library (yet) for anything even remotely performant or stable. There are many wrinkles waiting to be ironed out, including a more robust testing framework. Using some BLAS / LAPACK descendant is always going to be the better option. For simple hobbyist code, however, the API is simple enough to get up and running quickly.
 
-```make
-clang -std=c17 -Wall -Wextra -O3 -ffast-math -mavx -mfma -Iinclude/ -c src/autograd.c bin/autograd.o 
-clang -std=c17 -Wall -Wextra -O3 -ffast-math -mavx -mfma -Iinclude/ -c src/matrix.c bin/matrix.o 
-clang -std=c17 -Wall -Wextra -O3 -ffast-math -Iinclude/ -c main.c bin/main.o 
-clang -std=c17 -Wall -Wextra bin/main.o bin/autograd.o bin/matrix.o -o main -lm 
+To create a debug build: 
+```
+make DEBUG=1
+make clean
+```
+
+To create a non-debug build: 
+```
+make 
+make clean
+
+```
+To compile `matrixgrad` into a static library: 
+```
+make libmatrix.a
+make clean
 ```
 Do not forget to add `-Ipath/to/matrix.h` in your project LSP settings :)
 
