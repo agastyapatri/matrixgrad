@@ -28,27 +28,44 @@ void ad_mul_backward(matrix* out){
 }
 
 void ad_add_backward(matrix* out){
-	for(size_t i = 0; i < out->rows; i++){
-		double* ogradrow = out->grad + (i * out->stride);
-		double* p0gradrow = out->previous[0]->grad + (i * out->stride);
-		double* p1gradrow = out->previous[1]->grad + (i * out->stride);
-		for(size_t j = 0; j < out->cols; j++){
+	int stride = out->stride;
+	for(size_t i = 0; i < out->previous[0]->rows; i++){
+		double* ogradrow = out->grad + (i * stride);
+		double* p0gradrow = out->previous[0]->grad + (i * stride);
+		for(size_t j = 0; j < out->previous[0]->cols; j++){
 			p0gradrow[j] += ogradrow[j];
+		}
+	}
+
+	for(size_t i = 0; i < out->previous[1]->rows; i++){
+		double* ogradrow = out->grad + (i * stride);
+		double* p1gradrow = out->previous[1]->grad + (i * stride);
+		for(size_t j = 0; j < out->previous[1]->cols; j++){
 			p1gradrow[j] += ogradrow[j];
 		}
 	}
+
+
+
 }
 
 void ad_sub_backward(matrix* out){
-	for(size_t i = 0; i < out->rows; i++){
-		double* ogradrow = out->grad + (i * out->stride);
-		double* p0gradrow = out->previous[0]->grad + (i * out->stride);
-		double* p1gradrow = out->previous[1]->grad + (i * out->stride);
-		for(size_t j = 0; j < out->cols; j++){
+	int stride = out->stride;
+	for(size_t i = 0; i < out->previous[0]->rows; i++){
+		double* ogradrow = out->grad + (i * stride);
+		double* p0gradrow = out->previous[0]->grad + (i * stride);
+		for(size_t j = 0; j < out->previous[0]->cols; j++){
 			p0gradrow[j] += ogradrow[j];
-			p1gradrow[j] -= ogradrow[j];
 		}
 	}
+
+	for(size_t i = 0; i < out->previous[1]->rows; i++){
+		double* ogradrow = out->grad + (i * stride);
+		double* p1gradrow = out->previous[1]->grad + (i * stride);
+		for(size_t j = 0; j < out->previous[1]->cols; j++){
+			p1gradrow[j] -= ogradrow[j];
+		}
+	} 
 }
 
 void ad_log_backward(matrix* out){

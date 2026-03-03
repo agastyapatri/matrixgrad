@@ -118,8 +118,7 @@ bool 	matrix_equality(matrix* a, matrix* b);
 void 	matrix_randomize(matrix* m, double (*function)(double, double));
 matrix* matrix_random_uniform(int ROWS, int COLS, double left, double right, bool requires_grad);
 matrix* matrix_random_normal(int ROWS, int COLS, double mu, double sigma, bool requires_grad);
-void 	matrix_add_rowwise(matrix* mat, matrix* vec, matrix* out);
-void 	matrix_add_colwise(matrix* mat, matrix* vec, matrix* out);
+matrix* matrix_add_rowwise(matrix* mat, matrix* vec);
 double  matrix_trace(const matrix* m);
 
 //	mathematics for the comp graph construction

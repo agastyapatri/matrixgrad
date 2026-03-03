@@ -423,6 +423,7 @@ matrix* matrix_random_uniform(int ROWS, int COLS, double left, double right, boo
 
 
 matrix* matrix_random_normal(int ROWS, int COLS, double mu, double sigma, bool requires_grad){
+	assert(sigma > (0 + 100*EPSILON));
 	matrix* m = matrix_alloc(ROWS, COLS, requires_grad);
 	for(int i = 0; i < ROWS; i++){
 		double* row = m->data + (i * m->stride);
@@ -434,23 +435,31 @@ matrix* matrix_random_normal(int ROWS, int COLS, double mu, double sigma, bool r
 }
 
 
-void matrix_add_rowwise(matrix* mat,  matrix* vec, matrix* out){
-	for (size_t i = 0; i < out->rows; i++) {
-		for (size_t j = 0; j < out->cols; j++) {
-			out->data[i*out->cols + j] = vec->data[j]+mat->data[i*mat->cols + j]; 
-		} 
+matrix* matrix_add_rowwise(matrix* mat, matrix* vec){
+	assert(vec->rows == 1);
+	assert(mat->cols == vec->cols);
+	assert(!(MATRIX_NULL(mat) || MATRIX_NULL(vec)));
+	matrix* out = matrix_alloc(mat->rows, mat->cols, mat->requires_grad || vec->requires_grad);
+	double* vecrow = vec->data;
+	for(size_t i = 0; i < out->rows; i++){
+		double* outrow = out->data + (i * out->stride);
+		double* matrow = mat->data + (i * mat->stride);
+		for(size_t j = 0; j < out->cols; j++){
+			outrow[j] = matrow[j] + vecrow[j];
+		}
 	}
+	if(out->requires_grad){
+		out->num_prevs = 2;
+		out->previous[0] = (matrix*)mat; 
+		out->previous[1] = (matrix*)vec;
+		out->op = ADD; 
+		(*(mat->ref_count))++;
+		(*(vec->ref_count))++;
+	}
+	return out;
 }
 
 
-void matrix_add_colwise(matrix* mat, matrix* vec, matrix* out){
-	for (size_t i = 0; i < out->rows; i++) {
-		for (size_t j = 0; j < out->cols; j++) {
-			out->data[i*out->cols + j] = vec->data[i]+mat->data[i*mat->cols + j]; 
-		} 
-	}
-
-}
 
 void matrix_scalar_mul(matrix* input, double scalar, matrix* output){
 	for(size_t i = 0; i < input->size; i++){
