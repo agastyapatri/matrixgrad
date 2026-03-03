@@ -40,6 +40,7 @@ typedef enum {
 	EXP,
 	POW,
 	SIGMOID,
+	SOFTMAX,
 	RELU,
 	SUM,
 	MEAN,
@@ -81,7 +82,7 @@ static inline double get(const matrix* m, int i, int j){
 	return m->data[offset(m, i, j)];
 }
 static inline void set(matrix* m, double val, int i, int j){
-	m->data[i*m->cols + j] = val;
+	m->data[i*m->stride + j] = val;
 }
 static inline bool matrix_is_square(const matrix* m){
 	return (m->rows == m->cols) ? 1 : 0;
@@ -133,6 +134,7 @@ matrix* matrix_cos(matrix* inp1);
 matrix* matrix_log(matrix* inp1);
 matrix* matrix_exp(matrix* inp1);
 matrix* matrix_tanh(matrix* inp1);
+matrix* matrix_softmax(matrix* inp1);
 matrix* matrix_sigmoid(matrix* inp1);
 matrix* matrix_relu(matrix* inp1);
 matrix* matrix_mse(matrix* inp1, matrix* inp2);

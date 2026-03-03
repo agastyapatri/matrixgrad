@@ -44,9 +44,6 @@ void ad_add_backward(matrix* out){
 			p1gradrow[j] += ogradrow[j];
 		}
 	}
-
-
-
 }
 
 void ad_sub_backward(matrix* out){
@@ -148,6 +145,26 @@ void ad_relu_backward(matrix* out){
 	}
 }
 
+void ad_softmax_backward(matrix* out){
+	size_t rows = out->rows; 
+	size_t cols = out->cols; 
+	size_t stride = out->stride; 
+	for(size_t i = 0; i < rows; i++){
+		double* ogradrow = out->grad + (i * stride);
+		double* odatarow = out->data + (i * stride);
+		double* pgradrow = out->previous[0]->grad + (i * stride);
+		for(size_t j = 0; j < cols; j++){
+			if(i == j){
+				pgradrow[j] += ogradrow[j]*odatarow[j]*(1 - odatarow[j]);
+			}
+			else{
+				pgradrow[j] += ogradrow[j] * -(odatarow[i] * odatarow[j]);
+			}
+		} 
+	}
+}
+
+
 void ad_sum_backward(matrix* out){
 	double ograd = *out->grad;
 	for(size_t i = 0; i < out->previous[0]->rows; i++){
@@ -242,6 +259,10 @@ void ad_mae_backward(matrix* out){
 	}
 }
 
+
+
+
+
 void matrix_grad(matrix* out){
 	switch (out->op) {
 		case ADD:
@@ -291,6 +312,9 @@ void matrix_grad(matrix* out){
 			return;
 		case STD: 
 			ad_std_backward(out);
+			return;
+		case SOFTMAX: 
+			ad_softmax_backward(out);
 			return;
 		case NONE: 
 			return;

@@ -130,48 +130,90 @@ static inline void BUF_POW(double* inp1, double* inp2, double* out, size_t size)
 }
 
 
-static inline void BUF_SIN(double* inp1, double* out, size_t size){
-	for(size_t i = 0; i < size; i++){
-		out[i] = sin(inp1[i]);
+static inline void BUF_SIN(double* inp, double* out, size_t rows, size_t cols, size_t stride){
+	for(size_t i = 0; i < rows; i++){
+		double* inprow = inp + (i * stride);
+		double* outrow = out + (i * stride);
+		for(size_t j = 0; j < cols; j++){
+			outrow[j] = sin(inprow[j]);
+		}
 	}
 }
 
-static inline void BUF_TANH(double* inp1, double* out, size_t size){
-	for(size_t i = 0; i < size; i++){
-		out[i] = tanh(inp1[i]);
+static inline void BUF_TANH(double* inp, double* out, size_t rows, size_t cols, size_t stride){
+	for(size_t i = 0; i < rows; i++){
+		double* inprow = inp + (i * stride);
+		double* outrow = out + (i * stride);
+		for(size_t j = 0; j < cols; j++){
+			outrow[j] = tanh(inprow[j]);
+		}
 	}
 }
 
-static inline void BUF_COS(double* inp1, double* out, size_t size){
-	for(size_t i = 0; i < size; i++){
-		out[i] = cos(inp1[i]);
+
+static inline void BUF_COS(double* inp, double* out, size_t rows, size_t cols, size_t stride){
+	for(size_t i = 0; i < rows; i++){
+		double* inprow = inp + (i * stride);
+		double* outrow = out + (i * stride);
+		for(size_t j = 0; j < cols; j++){
+			outrow[j] = cos(inprow[j]);
+		}
 	}
 }
 
-static inline void BUF_SIGMOID(double* inp, double* out, size_t size){
-	for(size_t i = 0; i < size; i++){
-		out[i] = 1.0 / (1 + exp(-inp[i]));
+static inline void BUF_SIGMOID(double* inp, double* out, size_t rows, size_t cols, size_t stride){
+	for(size_t i = 0; i < rows; i++){
+		double* inprow = inp + (i * stride);
+		double* outrow = out + (i * stride);
+		for(size_t j = 0; j < cols; j++){
+			outrow[j] = 1.0 / (1 + exp(-inprow[j]));
+		}
 	}
 }
 
-static inline void BUF_RELU(double* inp, double* out, size_t size){
-	for(size_t i = 0; i < size; i++){
-		out[i] = (inp[i] > 0) ? inp[i] : 0;
+static inline void BUF_RELU(double* inp, double* out, size_t rows, size_t cols, size_t stride){
+	for(size_t i = 0; i < rows; i++){
+		double* inprow = inp + (i * stride);
+		double* outrow = out + (i * stride);
+		for(size_t j = 0; j < cols; j++){
+			outrow[j] = (inprow[j] > 0) ? inprow[j] : 0;
+		}
 	}
 }
 
-static inline void BUF_LOG(double* inp, double* out, size_t size){
-	for(size_t i = 0; i < size; i++){
-		out[i] = log(inp[i]);
+
+static inline void BUF_LOG(double* inp, double* out, size_t rows, size_t cols, size_t stride){
+	for(size_t i = 0; i < rows; i++){
+		double* inprow = inp + (i * stride);
+		double* outrow = out + (i * stride);
+		for(size_t j = 0; j < cols; j++){
+			outrow[j] = log(inprow[j]);
+		}
 	}
 }
 
-static inline void BUF_EXP(double* inp, double* out, size_t size){
-	for(size_t i = 0; i < size; i++){
-		out[i] = exp(inp[i]);
+static inline void BUF_EXP(double* inp, double* out, size_t rows, size_t cols, size_t stride){
+	for(size_t i = 0; i < rows; i++){
+		double* inprow = inp + (i * stride);
+		double* outrow = out + (i * stride);
+		for(size_t j = 0; j < cols; j++){
+			outrow[j] = exp(inprow[j]);
+		}
 	}
 }
 
+
+static inline void BUF_SOFTMAX(double* inp1, double* out, size_t rows, size_t cols, size_t stride){
+	for(size_t i = 0; i < rows; i++){
+		double rowsum = 0.0; 
+		for(size_t j = 0; j < cols; j++){
+			rowsum += exp(*(inp1 + (i*stride + j)));
+		}
+		for(size_t j = 0; j < cols; j++){
+			*(out + (i * stride + j)) = exp(*(inp1 + (i*stride + j))) / rowsum; 
+		} 
+	}
+}
 
 static inline void BUF_SUB(double* inp1, double* inp2, double* out, size_t rows, size_t cols, size_t stride){
 	size_t vector_limit = (cols / 4) * 4;
@@ -351,6 +393,8 @@ static inline char* get_optype_string(OPTYPE op){
 			return "tanh";
 		case SIGMOID: 
 			return "sigmoid";
+		case SOFTMAX: 
+			return "softmax";
 		case RELU: 
 			return "relu";
 	}

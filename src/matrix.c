@@ -217,7 +217,7 @@ matrix* matrix_pow(matrix* inp1, matrix* inp2){
 matrix* matrix_sin(matrix* inp1){
 	assert(inp1 != NULL);
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
-	BUF_SIN(inp1->data, out->data, inp1->size);
+	BUF_SIN(inp1->data, out->data, inp1->rows, inp1->cols, inp1->stride);
 	if(out->requires_grad){
 		out->op = SIN;
 		out->previous[0] = inp1;
@@ -231,7 +231,7 @@ matrix* matrix_sin(matrix* inp1){
 matrix* matrix_sigmoid(matrix* inp1){
 	assert(inp1 != NULL);
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
-	BUF_SIGMOID(inp1->data, out->data, inp1->size);
+	BUF_SIGMOID(inp1->data, out->data, inp1->rows, inp1->cols, inp1->stride);
 	if(out->requires_grad){
 		out->op = SIGMOID;
 		out->previous[0] = inp1;
@@ -245,7 +245,7 @@ matrix* matrix_sigmoid(matrix* inp1){
 matrix* matrix_relu(matrix* inp1){
 	assert(inp1 != NULL);
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
-	BUF_RELU(inp1->data, out->data, inp1->size);
+	BUF_RELU(inp1->data, out->data, inp1->rows, inp1->cols, inp1->stride);
 	if(out->requires_grad){
 		out->op = RELU;
 		out->previous[0] = inp1;
@@ -259,9 +259,24 @@ matrix* matrix_relu(matrix* inp1){
 matrix* matrix_tanh(matrix* inp1){
 	assert(inp1 != NULL);
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
-	BUF_TANH(inp1->data, out->data, inp1->size);
+	BUF_TANH(inp1->data, out->data, inp1->rows, inp1->cols, inp1->stride);
 	if(out->requires_grad){
 		out->op = TANH;
+		out->previous[0] = inp1;
+		out->previous[1] = NULL;
+		out->num_prevs = 1;
+		(*(inp1->ref_count))++;
+	}
+	return out;
+}
+
+
+matrix* matrix_softmax(matrix* inp1){
+	assert(!MATRIX_NULL(inp1));
+	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad);
+	BUF_SOFTMAX(inp1->data, out->data, inp1->rows, inp1->cols, inp1->stride);
+	if(out->requires_grad){
+		out->op = SOFTMAX;
 		out->previous[0] = inp1;
 		out->previous[1] = NULL;
 		out->num_prevs = 1;
@@ -273,7 +288,7 @@ matrix* matrix_tanh(matrix* inp1){
 matrix* matrix_log(matrix* inp1){
 	assert(inp1 != NULL);
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
-	BUF_LOG(inp1->data, out->data, inp1->size);
+	BUF_LOG(inp1->data, out->data, inp1->rows, inp1->cols, inp1->stride);
 	if(out->requires_grad){
 		out->op = LOG;
 		out->previous[0] = inp1;
@@ -286,7 +301,7 @@ matrix* matrix_log(matrix* inp1){
 matrix* matrix_exp(matrix* inp1){
 	assert(inp1 != NULL);
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
-	BUF_EXP(inp1->data, out->data, inp1->size);
+	BUF_EXP(inp1->data, out->data, inp1->rows, inp1->cols, inp1->stride);
 	if(out->requires_grad){
 		out->op = EXP;
 		out->previous[0] = inp1;
@@ -301,7 +316,7 @@ matrix* matrix_cos(matrix* inp1){
 	assert(inp1 != NULL);
 
 	matrix* out = matrix_alloc(inp1->rows, inp1->cols, inp1->requires_grad );
-	BUF_COS(inp1->data, out->data, inp1->size);
+	BUF_COS(inp1->data, out->data, inp1->rows, inp1->cols, inp1->stride);
 	if(out->requires_grad){
 		out->op = COS;
 		out->previous[0] = inp1;
