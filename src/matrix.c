@@ -20,15 +20,13 @@ matrix* matrix_alloc(int ROWS, int COLS, bool requires_grad){
 	m->rows = ROWS;
 	m->cols = COLS;
 	m->op = NONE;
-	m->ref_count = (int*)malloc(sizeof(int));
-	m->ref_count[0] = 1;
+	m->ref_count = 1;
 	m->stride = (m->cols + (ALIGNMENT / sizeof(double)) - 1)  & ~((ALIGNMENT / sizeof(double)) - 1);
 	m->padding = m->stride - m->cols;
 	m->size = m->rows * m->stride;
 	m->bytes = m->size * sizeof(double);
 	m->data = (double*)aligned_alloc(ALIGNMENT, m->bytes);
 	if(!(m->data)){
-		free(m->ref_count);
 		free(m);
 		return NULL; 
 	}
@@ -42,7 +40,6 @@ matrix* matrix_alloc(int ROWS, int COLS, bool requires_grad){
 	if(m->requires_grad){
 		m->grad = (double*)aligned_alloc(ALIGNMENT, m->bytes);
 		if(!(m->grad)){
-			free(m->ref_count);
 			free(m->data);
 			free(m);
 			return NULL; 
@@ -110,7 +107,7 @@ matrix* matrix_transpose(matrix* m){
 	out->ref_count = m->ref_count;
 	out->requires_grad = m->requires_grad;
 	out->grad = m->grad;
-	(*(m->ref_count))++;
+	m->ref_count++;
 	return out;
 }
 
@@ -122,12 +119,11 @@ void matrix_free(matrix* m){
 	if(MATRIX_NULL(m)){
 		MATRIX_ERROR("ERROR: argument in matrix_free() is NULL\n");
 	}
-	if(*(m->ref_count) == 0){
+	if(m->ref_count == 0){
 		MATRIX_ERROR("ERROR: argument in matrix_free() is already freed.\n");
 	}
-	(*(m->ref_count))--;
-	if(*(m->ref_count) == 0){
-		free(m->ref_count);
+	m->ref_count--;
+	if(m->ref_count == 0){
 		free(m->data);
 		if(!m->requires_grad){
 			free(m->grad);
@@ -147,15 +143,13 @@ void matrix_print(matrix *m){
 		if(i >= 1) printf("        ");
 		printf("[");
 		for(size_t j = 0; j < m->cols; j++){
-			printf("%lf", row[j]);
+			printf("%10.7f", row[j]);
 			if(j != m->cols-1) printf(", ");
 		}
 		printf("]");
 		if(!(i == m->rows-1)) printf(",\n");
 
 	}
-
-
 
 	char* opstring = get_optype_string(m->op);
 	printf("]");
@@ -177,8 +171,8 @@ matrix* matrix_matmul(matrix* inp1, matrix* inp2){
 		out->previous[0] = inp1;
 		out->previous[1] = inp2;
 		out->num_prevs = 2;
-		(*(inp1->ref_count))++;
-		(*(inp2->ref_count))++;
+		inp1->ref_count++;
+		inp2->ref_count++;
 	}
 	return out;
 }
@@ -195,8 +189,8 @@ matrix* matrix_add(matrix* inp1, matrix* inp2){
 		out->previous[0] = inp1;
 		out->previous[1] = inp2;
 		out->num_prevs = 2;
-		(*(inp1->ref_count))++;
-		(*(inp2->ref_count))++;
+		inp1->ref_count++;
+		inp2->ref_count++;
 	}
 	return out;
 }
@@ -208,8 +202,8 @@ matrix* matrix_pow(matrix* inp1, matrix* inp2){
 		out->previous[0] = inp1;
 		out->previous[1] = inp2;
 		out->num_prevs = 2;
-		(*(inp1->ref_count))++;
-		(*(inp2->ref_count))++;
+		inp1->ref_count++;
+		inp2->ref_count++;
 	}
 	return out;
 }
@@ -223,7 +217,7 @@ matrix* matrix_sin(matrix* inp1){
 		out->previous[0] = inp1;
 		out->previous[1] = NULL;
 		out->num_prevs = 1;
-		(*(inp1->ref_count))++;
+		inp1->ref_count++;
 	}
 	return out;
 }
@@ -237,7 +231,7 @@ matrix* matrix_sigmoid(matrix* inp1){
 		out->previous[0] = inp1;
 		out->previous[1] = NULL;
 		out->num_prevs = 1;
-		(*(inp1->ref_count))++;
+		inp1->ref_count++;
 	}
 	return out;
 }
@@ -251,7 +245,7 @@ matrix* matrix_relu(matrix* inp1){
 		out->previous[0] = inp1;
 		out->previous[1] = NULL;
 		out->num_prevs = 1;
-		(*(inp1->ref_count))++;
+		inp1->ref_count++;
 	}
 	return out;
 }
@@ -265,7 +259,7 @@ matrix* matrix_tanh(matrix* inp1){
 		out->previous[0] = inp1;
 		out->previous[1] = NULL;
 		out->num_prevs = 1;
-		(*(inp1->ref_count))++;
+		inp1->ref_count++;
 	}
 	return out;
 }
@@ -280,7 +274,7 @@ matrix* matrix_softmax(matrix* inp1){
 		out->previous[0] = inp1;
 		out->previous[1] = NULL;
 		out->num_prevs = 1;
-		(*(inp1->ref_count))++;
+		inp1->ref_count++;
 	}
 	return out;
 }
@@ -294,7 +288,7 @@ matrix* matrix_log(matrix* inp1){
 		out->previous[0] = inp1;
 		out->previous[1] = NULL;
 		out->num_prevs = 1;
-		(*(inp1->ref_count))++;
+		inp1->ref_count++;
 	}
 	return out;
 }
@@ -307,7 +301,7 @@ matrix* matrix_exp(matrix* inp1){
 		out->previous[0] = inp1;
 		out->previous[1] = NULL;
 		out->num_prevs = 1;
-		(*(inp1->ref_count))++;
+		inp1->ref_count++;
 	}
 	return out;
 }
@@ -322,7 +316,7 @@ matrix* matrix_cos(matrix* inp1){
 		out->previous[0] = inp1;
 		out->previous[1] = NULL;
 		out->num_prevs = 1;
-		(*(inp1->ref_count))++;
+		inp1->ref_count++;
 	}
 	return out;
 }
@@ -339,8 +333,8 @@ matrix* matrix_sub(matrix* inp1, matrix* inp2){
 		out->previous[0] = inp1;
 		out->previous[1] = inp2;
 		out->num_prevs = 2;
-		(*(inp1->ref_count))++;
-		(*(inp2->ref_count))++;
+		inp1->ref_count++;
+		inp2->ref_count++;
 	}
 	return out;
 } 
@@ -357,8 +351,8 @@ matrix* matrix_mul(matrix* inp1, matrix* inp2){
 		out->previous[0] = inp1;
 		out->previous[1] = inp2;
 		out->num_prevs = 2;
-		(*(inp1->ref_count))++;
-		(*(inp2->ref_count))++;
+		inp1->ref_count++;
+		inp2->ref_count++;
 	}
 	return out;
 }
@@ -392,7 +386,7 @@ matrix* matrix_reshape(matrix* m, size_t ROWS, size_t COLS){
 	out->ref_count = m->ref_count;
 	out->requires_grad = m->requires_grad;
 	out->grad = m->grad;
-	(*(m->ref_count))++;
+	m->ref_count++;
 	return out;
 }
 
@@ -468,8 +462,8 @@ matrix* matrix_add_rowwise(matrix* mat, matrix* vec){
 		out->previous[0] = (matrix*)mat; 
 		out->previous[1] = (matrix*)vec;
 		out->op = ADD; 
-		(*(mat->ref_count))++;
-		(*(vec->ref_count))++;
+		mat->ref_count++;
+		vec->ref_count++;
 	}
 	return out;
 }
@@ -499,7 +493,7 @@ matrix* matrix_copy(const matrix* input){
 
 
 matrix* matrix_max(const matrix* m){
-	if(MATRIX_NULL(m) || *(m->ref_count) == 0){
+	if(MATRIX_NULL(m) || m->ref_count == 0){
 		MATRIX_ERROR("matrix passed to matrix_max() is NULL or already has been freed.\n");
 	}
 	matrix* max = matrix_alloc(1,1, 0); 
@@ -512,7 +506,7 @@ matrix* matrix_max(const matrix* m){
 }
 
 matrix* matrix_min(const matrix* m){
-	if(MATRIX_NULL(m) || *(m->ref_count) == 0){
+	if(MATRIX_NULL(m) || m->ref_count == 0){
 		MATRIX_ERROR("matrix passed to matrix_max() is NULL or already has been freed.\n");
 	}
 	matrix* max = matrix_alloc(1,1, 0); 
@@ -532,7 +526,6 @@ matrix* matrix_mean(matrix* m){
 		mean->op = MEAN;
 		mean->previous[0] = m;
 		mean->num_prevs = 1;
-		mean->ref_count[0]++;
 	}
 	return mean;
 }
@@ -546,7 +539,6 @@ matrix* matrix_std(matrix* m){
 		std->op = STD;
 		std->previous[0] = m;
 		std->num_prevs = 1;
-		std->ref_count[0]++;
 	}
 	return std;
 }
@@ -559,7 +551,6 @@ matrix* matrix_sum(matrix* m){
 		sum->op = SUM;
 		sum->previous[0] = m;
 		sum->num_prevs = 1;
-		sum->ref_count[0]++;
 	}
 	return sum;
 }
@@ -574,8 +565,7 @@ matrix* matrix_mse(matrix* inp1, matrix* inp2){
 		mse->op = MSE; 
 		mse->num_prevs = 1; 
 		mse->previous[0] = inp1;
-		mse->previous[1] = inp2;
-		inp1->ref_count[0]++;
+		inp1->ref_count++;
 	}
 	return mse;
 }
@@ -589,8 +579,7 @@ matrix* matrix_mae(matrix* inp1,const matrix* inp2){
 		mse->op = MAE; 
 		mse->num_prevs = 1; 
 		mse->previous[0] = inp1;
-		mse->previous[1] = inp2;
-		inp1->ref_count[0]++;
+		inp1->ref_count++;
 	}
 	return mse;
 }
@@ -666,8 +655,7 @@ matrix* matrix_from_raw(double* arr, size_t rows, size_t cols){
 	out->size = out->rows * out->stride;
 	out->bytes = out->size * sizeof(double);
 	out->data = arr;
-	out->ref_count = (int*)malloc(sizeof(int));
-	out->ref_count[0] = 1;
+	out->ref_count = 1;
 	out->grad = NULL;
 	return out;
 }

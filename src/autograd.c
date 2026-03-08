@@ -225,7 +225,6 @@ void ad_matmul_backward(matrix* out){
 			inp1row[j] += dinp1row[j];
 		}
 	}
-	free(outgrad->ref_count);
 	matrix_free(outgrad);
 	matrix_free(inp0transpose);
 	matrix_free(inp1transpose);

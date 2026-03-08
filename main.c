@@ -17,9 +17,6 @@ int main(){
 	matrix* out = matrix_softmax(m2);
 	matrix_backward(out);
 	matrix_print(matrix_from_raw(m2->grad, m2->rows, m2->cols));
-
-
-	
 } 
 
 

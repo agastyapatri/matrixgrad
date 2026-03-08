@@ -59,19 +59,19 @@ typedef enum {
 
 
 typedef struct matrix{
-	size_t rows;
-	size_t cols;
-	int* ref_count;
+	size_t 	rows;
+	size_t 	cols;
+	int 	ref_count;
 	double* data; 
-	size_t bytes;
-	int stride;
-	size_t size;
-	int padding;
-	bool requires_grad;
+	size_t 	bytes;
+	int 	stride;
+	size_t 	size;
+	int 	padding;
+	bool 	requires_grad;
 	double* grad;
-	OPTYPE op;
+	OPTYPE 	op;
+	int 	num_prevs;
 	struct matrix* previous[MAX_PREVS];
-	int num_prevs;
 } matrix;
 
 
